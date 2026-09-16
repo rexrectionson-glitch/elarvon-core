@@ -1,0 +1,84 @@
+name: Build ELARVON macOS installers
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: x86_64
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          brew install boost cmake libevent ninja pkg-config qrencode qt sqlite
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt)" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+            -DBUILD_GUI=ON \
+            -DBUILD_TESTS=OFF \
+            -DBUILD_BENCH=OFF \
+            -DBUILD_FUZZ_BINARY=OFF \
+            -DBUILD_TX=ON \
+            -DBUILD_UTIL=ON \
+            -DBUILD_WALLET_TOOL=ON \
+            -DENABLE_IPC=OFF \
+            -DWITH_ZMQ=OFF \
+            -DWITH_USDT=OFF
+
+      - name: Build application bundle
+        run: cmake --build build --target deploy --parallel 3
+
+      - name: Name architecture package
+        run: |
+          cp build/ELARVON-Core-31.2.0-macos.zip \
+            ELARVON-Core-31.2.0-macos-${{ matrix.arch }}-unsigned.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elarvon-macos-${{ matrix.arch }}
+          path: ELARVON-Core-31.2.0-macos-${{ matrix.arch }}-unsigned.zip
+          if-no-files-found: error
+
+  package:
+    name: Create DMG installers
+    needs: build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: elarvon-macos-*
+          path: packages
+          merge-multiple: true
+
+      - name: Create Apple Silicon, Intel, and universal DMGs
+        run: |
+          chmod +x contrib/macdeploy/package-elarvon-dmg.sh
+          mkdir release
+          OUTPUT_DIR="$PWD/release" contrib/macdeploy/package-elarvon-dmg.sh \
+            packages/ELARVON-Core-31.2.0-macos-arm64-unsigned.zip \
+            packages/ELARVON-Core-31.2.0-macos-x86_64-unsigned.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ELARVON-Core-31.2.0-macOS-DMGs
+          path: release/*.dmg
+          if-no-files-found: error

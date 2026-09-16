@@ -1,0 +1,27 @@
+# Copyright (c) 2023-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit/.
+
+function(generate_setup_nsi)
+  set(abs_top_srcdir ${PROJECT_SOURCE_DIR})
+  set(abs_top_builddir ${PROJECT_BINARY_DIR})
+  set(CLIENT_URL ${PROJECT_HOMEPAGE_URL})
+  set(INSTALLER_NAME "ELARVON-Core-${CLIENT_VERSION_MAJOR}.${CLIENT_VERSION_MINOR}.${CLIENT_VERSION_BUILD}-win64-setup.exe")
+  set(CLIENT_TARNAME "elarvon")
+  set(BITCOIN_WRAPPER_SOURCE_NAME "bitcoin")
+  set(BITCOIN_GUI_SOURCE_NAME "bitcoin-qt")
+  set(BITCOIN_DAEMON_SOURCE_NAME "bitcoind")
+  set(BITCOIN_CLI_SOURCE_NAME "bitcoin-cli")
+  set(BITCOIN_TX_SOURCE_NAME "bitcoin-tx")
+  set(BITCOIN_WALLET_TOOL_SOURCE_NAME "bitcoin-wallet")
+  set(BITCOIN_UTIL_SOURCE_NAME "bitcoin-util")
+  set(BITCOIN_WRAPPER_NAME "elarvon")
+  set(BITCOIN_GUI_NAME "elarvon-qt")
+  set(BITCOIN_DAEMON_NAME "elarvond")
+  set(BITCOIN_CLI_NAME "elarvon-cli")
+  set(BITCOIN_TX_NAME "elarvon-tx")
+  set(BITCOIN_WALLET_TOOL_NAME "elarvon-wallet")
+  set(BITCOIN_UTIL_NAME "elarvon-util")
+  set(EXEEXT ${CMAKE_EXECUTABLE_SUFFIX})
+  configure_file(${PROJECT_SOURCE_DIR}/share/setup.nsi.in ${PROJECT_BINARY_DIR}/elarvon-win64-setup.nsi USE_SOURCE_PERMISSIONS @ONLY)
+endfunction()

@@ -1,0 +1,22 @@
+/* XPM */
+static char * elarvon_xpm[] = {
+"16 16 2 1",
+"  c None",
+"X c #B58A45",
+"                ",
+"     XX         ",
+"   XX           ",
+"  X             ",
+"  X      X      ",
+" X   XXXXX      ",
+" X   XXXX  X    ",
+"    X     X     ",
+"    XXXX XX     ",
+" X  XXXX X    X ",
+" X    XXX     X ",
+"  X    X     X  ",
+"  X          X  ",
+"   XX      XX   ",
+"     XX  XX     ",
+"                "
+};
