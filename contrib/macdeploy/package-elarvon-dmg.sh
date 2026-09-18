@@ -94,11 +94,23 @@ if [[ -n "${arm_app}" && -n "${intel_app}" ]]; then
     mkdir -p "$(dirname "${universal_app}")"
     ditto "${arm_app}" "${universal_app}"
     codesign --remove-signature "${universal_app}" 2>/dev/null || true
-    lipo -create \
-        "${arm_app}/Contents/MacOS/ELARVON-Core" \
-        "${intel_app}/Contents/MacOS/ELARVON-Core" \
-        -output "${universal_app}/Contents/MacOS/ELARVON-Core"
-    lipo -info "${universal_app}/Contents/MacOS/ELARVON-Core"
+    while IFS= read -r arm_binary; do
+        relative_path="${arm_binary#${arm_app}/}"
+        intel_binary="${intel_app}/${relative_path}"
+        universal_binary="${universal_app}/${relative_path}"
+        if file "${arm_binary}" | grep -q 'Mach-O'; then
+            if [[ ! -f "${intel_binary}" ]] || ! file "${intel_binary}" | grep -q 'Mach-O'; then
+                echo "Missing Intel Mach-O counterpart: ${relative_path}" >&2
+                exit 1
+            fi
+            lipo -create "${arm_binary}" "${intel_binary}" -output "${universal_binary}"
+            architectures="$(lipo -archs "${universal_binary}")"
+            [[ " ${architectures} " == *" arm64 "* && " ${architectures} " == *" x86_64 "* ]] || {
+                echo "Universal verification failed: ${relative_path}" >&2
+                exit 1
+            }
+        fi
+    done < <(find "${arm_app}" -type f -print)
     sign_app "${universal_app}"
     make_dmg "${universal_app}" "universal"
 fi
